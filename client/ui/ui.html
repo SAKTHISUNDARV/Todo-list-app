@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>To-Do App</title>
+  <style>
+    :root{
+      --bg:#0f1724;
+      --muted:#9aa4b2;
+      --accent:#7c5cff;
+      --glass: rgba(255,255,255,0.05);
+      --shadow: 0 6px 22px rgba(2,6,23,0.6);
+      color-scheme: dark;
+      font-family: Inter, system-ui, sans-serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      background: var(--bg);
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    section{display:none;width:100%}
+    section:target{display:block}
+    #home:target, body:not(:has(:target)) #home{display:block}
+
+    /* Home Page */
+    .home{
+      text-align:center;
+      max-width:640px;
+      padding:40px;
+    }
+    .home h1{font-size:2.5rem;margin-bottom:12px;color:white}
+    .home p{color:var(--muted);font-size:1rem}
+    .btn{
+      display:inline-block;
+      margin-top:24px;
+      padding:14px 28px;
+      background:linear-gradient(90deg,var(--accent),#5bb4ff);
+      color:white;text-decoration:none;
+      border-radius:12px;
+      font-weight:600;
+      box-shadow:0 8px 28px rgba(124,92,255,0.25);
+    }
+
+    /* To-Do Page */
+    .app{
+      max-width:880px;
+      width:100%;
+      background:rgba(255,255,255,0.02);
+      border-radius:20px;
+      padding:28px;
+      box-shadow:var(--shadow);
+      border:1px solid rgba(255,255,255,0.05);
+      display:grid;
+      grid-template-columns: 1fr 280px;
+      gap:24px;
+      margin:20px;
+    }
+    .panel{background:var(--glass);border-radius:16px;padding:18px;}
+    .brand{display:flex;gap:12px;align-items:center;margin-bottom:12px;}
+    .logo{
+      width:52px;height:52px;border-radius:12px;
+      background:linear-gradient(135deg,var(--accent),#5bb4ff);
+      display:flex;align-items:center;justify-content:center;font-weight:700;color:white;font-size:20px;
+    }
+    h1{margin:0;font-size:18px;color:white}
+    p.lead{margin:8px 0 0;color:var(--muted);font-size:13px}
+    .add{margin-top:18px;display:flex;gap:10px;align-items:center;}
+    .add input{flex:1;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:var(--glass);color:white;font-size:14px;}
+    .add button{padding:12px 16px;border-radius:10px;border:0;background:linear-gradient(90deg,var(--accent),#5bb4ff);color:white;font-weight:600;cursor:pointer;}
+    .todo-list{margin-top:18px;display:flex;flex-direction:column;gap:10px;max-height:55vh;overflow:auto;}
+    .item{display:flex;gap:12px;align-items:center;padding:12px;border-radius:12px;background:rgba(255,255,255,0.03);}
+    .item input[type="checkbox"]{width:20px;height:20px;margin:0;cursor:pointer}
+    .item input:checked + .title{opacity:0.5;text-decoration:line-through}
+    .title{font-size:14px;color:#e6eef8}
+    .meta{font-size:12px;color:var(--muted);margin-left:auto}
+    .sidebar{display:flex;flex-direction:column;gap:12px}
+    .stats{padding:18px;border-radius:12px;background:rgba(255,255,255,0.04);}
+    .stat-row{display:flex;justify-content:space-between;margin-bottom:8px}
+    .big{font-size:22px;font-weight:700;color:white}
+    .small{font-size:13px;color:var(--muted)}
+    .filters{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .pill{padding:8px 12px;border-radius:999px;background:transparent;border:1px solid rgba(255,255,255,0.1);font-size:13px;color:var(--muted);cursor:pointer}
+    @media (max-width:840px){.app{grid-template-columns:1fr}}
+    .back{display:inline-block;margin-top:20px;font-size:14px;color:var(--muted);text-decoration:none}
+  </style>
+</head>
+<body>
+
+  <!-- Home Page -->
+  <section id="home" class="home">
+    <h1>Welcome to To-Do App</h1>
+    <p>Stay organized and productive with your daily tasks.</p>
+    <a href="#todo" class="btn">Go to To-Do List</a>
+  </section>
+
+  <!-- To-Do Page -->
+  <section id="todo">
+    <main class="app">
+      <section class="panel">
+        <div class="brand">
+          <div class="logo">TD</div>
+          <div>
+            <h1>Daily To-Do</h1>
+            <p class="lead">Track and manage your tasks easily.</p>
+          </div>
+        </div>
+
+        <!-- Add task -->
+        <div class="add">
+          <input type="text" placeholder="Add a new task (UI only)">
+          <button>Add</button>
+        </div>
+
+        <!-- Task List -->
+        <div class="todo-list">
+          <label class="item">
+            <input type="checkbox">
+            <div class="title">Finish unit tests</div>
+            <div class="meta">Today</div>
+          </label>
+          <label class="item">
+            <input type="checkbox" checked>
+            <div class="title">Read 20 pages</div>
+            <div class="meta">Completed</div>
+          </label>
+          <label class="item">
+            <input type="checkbox">
+            <div class="title">Push changes to GitHub</div>
+            <div class="meta">Pending</div>
+          </label>
+        </div>
+
+        <a href="#home" class="back">← Back to Home</a>
+      </section>
+
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="stats panel">
+          <div class="stat-row"><div class="small">Today’s Tasks</div><div class="big">3</div></div>
+          <div class="stat-row"><div class="small">Completed</div><div class="big">1</div></div>
+          <div class="stat-row"><div class="small">Pending</div><div class="big">2</div></div>
+
+          <hr style="border:none;height:1px;background:rgba(255,255,255,0.1);margin:12px 0" />
+          <div class="small">Filters</div>
+          <div class="filters">
+            <div class="pill">Completed</div>
+            <div class="pill">Pending</div>
+            <div class="pill">Other</div>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </section>
+
+</body>
+</html>
