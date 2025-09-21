@@ -1,31 +1,11 @@
-import React, { useEffect, useState, useRef } from "react";
-import { FaPlus } from "react-icons/fa";
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import Alert from "./Alert";
+import Header from "./Header";
 import Dashboard from "./Dashboard";
 import Filters from "./Filters";
 import TaskList from "./TaskList";
-
-// Alert Component
-const Alert = ({ message, type = "success", onClose }) => {
-  if (!message) return null;
-
-  const bgColor =
-    type === "success"
-      ? "bg-green-500"
-      : type === "error"
-      ? "bg-red-500"
-      : "bg-blue-500";
-
-  return (
-    <div
-      className={`fixed top-5 right-5 text-white px-4 py-3 rounded shadow-md ${bgColor} flex justify-between items-center w-80`}
-    >
-      <span>{message}</span>
-      <button className="ml-4 font-bold" onClick={onClose}>
-        ×
-      </button>
-    </div>
-  );
-};
+import AddTask from "./AddTask";
+import api from "../api";
 
 const Todo = () => {
   const [tasks, setTasks] = useState([]);
@@ -33,207 +13,165 @@ const Todo = () => {
   const [newTask, setNewTask] = useState("");
   const [filter, setFilter] = useState("all");
   const [alert, setAlert] = useState({ message: "", type: "success" });
+  const [loading, setLoading] = useState(false);
 
   const inputRef = useRef(null);
+  const profileRef = useRef(null);
 
-  // Focus input when Add Task opens
-  useEffect(() => {
-    if (showAdd && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [showAdd]);
+  const user = JSON.parse(localStorage.getItem("user")) || null;
 
-  const showAlert = (message, type = "success") => {
+  const showAlert = useCallback((message, type = "success") => {
     setAlert({ message, type });
     setTimeout(() => setAlert({ message: "", type: "success" }), 3000);
-  };
-
-  // Fetch tasks once on mount
-  useEffect(() => {
-    fetch("http://localhost:5000/tasks")
-      .then((res) => res.json())
-      .then((data) => setTasks(data))
-      .catch((err) => {
-        console.error("Error fetching tasks:", err);
-        showAlert("Failed to fetch tasks!", "error");
-      });
   }, []);
 
-  // Add Task
-  const addTask = async () => {
+  // Fetch tasks - CORRECTED
+  useEffect(() => {
+    if (!user) return;
+    
+    const fetchTasks = async () => {
+      setLoading(true);
+      try {
+        const res = await api.get("/tasks");
+        setTasks(Array.isArray(res.data) ? res.data : []);
+      } catch (err) {
+        console.error("Error fetching tasks:", err);
+        // Handle error without causing infinite loops
+        setAlert({ message: "Failed to fetch tasks!", type: "error" });
+        setTimeout(() => setAlert({ message: "", type: "success" }), 3000);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTasks();
+  }, []); // ← Only user as dependency
+
+  // Add task - CORRECTED
+  const addTask = useCallback(async () => {
     if (!newTask.trim()) return;
     try {
-      const res = await fetch("http://localhost:5000/add", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ taskname: newTask }),
-      });
-      const data = await res.json();
-      setTasks([{ id: data.id, taskname: newTask, status: 0 }, ...tasks]);
+      const res = await api.post("/tasks", { taskname: newTask });
+      setTasks(prevTasks => [res.data, ...prevTasks]);
       setNewTask("");
+      setShowAdd(false); // ← Close the add form
       showAlert("Task added successfully!", "success");
     } catch (error) {
       console.error("Error adding task:", error);
       showAlert("Failed to add task!", "error");
     }
-  };
+  }, [newTask, showAlert]);
 
-  // Toggle Task Status
-  const toggleTaskStatus = async (id) => {
+  // Toggle task status
+  const toggleTaskStatus = useCallback(async (id) => {
     try {
-      await fetch("http://localhost:5000/updatestatus", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-
-      setTasks((prevTasks) =>
-        prevTasks.map((task) => {
-          if (task.id === id) {
-            const newStatus = task.status ? 0 : 1;
-            showAlert(
-              newStatus ? "Marked as completed!" : "Marked as pending",
-              "blue"
-            );
-            return { ...task, status: newStatus };
-          }
-          return task;
-        })
-      );
+      const res = await api.put(`/tasks/${id}/status`);
+      setTasks(prev => prev.map((t) => (t.id === id ? { ...t, status: res.data.status } : t)));
+      showAlert("Task status updated!", "blue");
     } catch (error) {
-      console.error("Error toggling status:", error);
+      console.error(error);
       showAlert("Failed to update status!", "error");
     }
-  };
+  }, [showAlert]);
 
-  // Update Task
-  const updateTask = async (id, taskname) => {
+  // Update task name
+  const updateTask = useCallback(async (id, taskname) => {
     try {
-      const res = await fetch("http://localhost:5000/update", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, taskname }),
-      });
-      const data = await res.json();
-      if (data.affectedRows > 0) {
-        setTasks((prevTasks) =>
-          prevTasks.map((task) => (task.id === id ? { ...task, taskname } : task))
-        );
-        showAlert("Task updated successfully!", "success");
-      }
+      await api.put(`/tasks/${id}`, { taskname });
+      setTasks(prev => prev.map((t) => (t.id === id ? { ...t, taskname } : t)));
+      showAlert("Task updated successfully!", "success");
     } catch (error) {
-      console.error("Error updating task:", error);
+      console.error(error);
       showAlert("Failed to update task!", "error");
     }
-  };
+  }, [showAlert]);
 
-  // Delete Task
-  const deleteTask = async (id) => {
+  // Delete task
+  const deleteTask = useCallback(async (id) => {
     try {
-      await fetch("http://localhost:5000/delete", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-      setTasks((prevTasks) => prevTasks.filter((task) => task.id !== id));
+      await api.delete(`/tasks/${id}`);
+      setTasks(prev => prev.filter((t) => t.id !== id));
       showAlert("Task deleted!", "success");
     } catch (error) {
-      console.error("Error deleting task:", error);
+      console.error(error);
       showAlert("Failed to delete task!", "error");
     }
-  };
+  }, [showAlert]);
 
-  // Filter tasks
+  // Clear all tasks
+  const clearAllTasks = useCallback(async () => {
+    if (!window.confirm("Are you sure you want to clear all tasks?")) return;
+    try {
+      await api.delete("/clearalltasks");
+      setTasks([]);
+      showAlert("All tasks cleared!", "success");
+    } catch (error) {
+      console.error("Error clearing tasks:", error);
+      showAlert("Failed to clear tasks!", "error");
+    }
+  }, [showAlert]);
+
+  // Filter tasks based on current filter
   const filteredTasks = tasks.filter((task) => {
-    if (filter === "completed") return task.status;
-    if (filter === "pending") return !task.status;
+    if (filter === "completed") return task.status === 1;
+    if (filter === "pending") return task.status === 0;
     return true;
   });
 
-  // Dashboard stats
+  // Calculate stats
   const total = tasks.length;
-  const completed = tasks.filter((t) => t.status).length;
+  const completed = tasks.filter((t) => t.status === 1).length;
   const pending = total - completed;
   const progress = total === 0 ? 0 : Math.round((completed / total) * 100);
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.href = "/signin";
+  };
+
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 to-indigo-100 pt-8 px-5 pb-10 overflow-auto">
-      {/* Alert */}
+    <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 to-indigo-100 pt-4 px-5 overflow-auto">
       <Alert
         message={alert.message}
         type={alert.type}
         onClose={() => setAlert({ message: "", type: "success" })}
       />
-
-      {/* Header */}
-      <div className="flex flex-col justify-center items-center gap-2 mb-8">
-        <h1 className="text-blue-600 font-bold text-3xl">Todo List App</h1>
-        <p className="text-gray-600">Focus on what matters today</p>
-      </div>
+      {user && <Header user={user} handleLogout={handleLogout} profileRef={profileRef} />}
 
       <div className="max-w-6xl mx-auto">
-        {/* Dashboard + Filters */}
-        <div className="flex flex-col lg:flex-row gap-6 mb-8">
-          <Dashboard
-            total={total}
-            completed={completed}
-            pending={pending}
-            progress={progress}
-          />
-          <Filters
-            filter={filter}
-            setFilter={setFilter}
-            total={total}
-            completed={completed}
-            pending={pending}
-          />
-        </div>
-
-        {/* Tasks Section */}
-        <div className="bg-white rounded-xl p-6 shadow-md">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 md:gap-0">
-            <h2 className="font-semibold text-blue-600 text-xl">
-              Today's Tasks
-            </h2>
-            <button
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-              onClick={() => setShowAdd(!showAdd)}
-            >
-              <FaPlus />
-              <span>Add Task</span>
-            </button>
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
           </div>
-
-          {/* Add Task Input */}
-          {showAdd && (
-            <div className="flex flex-col sm:flex-row gap-2 mb-6">
-              <input
-                ref={inputRef}
-                type="text"
-                value={newTask}
-                onChange={(e) => setNewTask(e.target.value)}
-                className="flex-1 px-4 py-2 rounded-lg bg-gray-100 focus:outline-none"
-                placeholder="Enter a new task"
-                onKeyPress={(e) => e.key === "Enter" && addTask()}
-              />
-              <button
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-                onClick={addTask}
-              >
-                Add
-              </button>
+        ) : (
+          <>
+            <div className="flex flex-col lg:flex-row gap-4 mb-5">
+              <Dashboard total={total} completed={completed} pending={pending} progress={progress} />
+              <Filters filter={filter} setFilter={setFilter} total={total} completed={completed} pending={pending} />
             </div>
-          )}
 
-          {/* Task List */}
-          <TaskList
-            tasks={filteredTasks}
-            toggleTaskStatus={toggleTaskStatus}
-            deleteTask={deleteTask}
-            updateTask={updateTask}
-            filter={filter}
-          />
-        </div>
+            <div className="bg-white rounded-xl p-6 shadow-md">
+              <AddTask
+                showAdd={showAdd}
+                setShowAdd={setShowAdd}
+                newTask={newTask}
+                setNewTask={setNewTask}
+                addTask={addTask}
+                inputRef={inputRef}
+                clearAllTasks={clearAllTasks}
+              />
+
+              <TaskList
+                tasks={filteredTasks}
+                toggleTaskStatus={toggleTaskStatus}
+                deleteTask={deleteTask}
+                updateTask={updateTask}
+                filter={filter}
+              />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

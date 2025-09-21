@@ -1,8 +1,12 @@
 import React from "react";
 import { MdOutlineCalendarToday } from "react-icons/md";
 import { FaCheckCircle, FaRegCircle } from "react-icons/fa";
+import PropTypes from 'prop-types';
 
 const Dashboard = ({ total, completed, pending, progress }) => {
+  // Ensure progress is within valid range
+  const safeProgress = Math.min(Math.max(progress, 0), 100);
+
   return (
     <div className="bg-white rounded-xl p-6 shadow-md flex-1">
       <h2 className="font-semibold text-blue-600 text-xl mb-5">Dashboard</h2>
@@ -45,17 +49,30 @@ const Dashboard = ({ total, completed, pending, progress }) => {
       <div className="mt-6">
         <div className="flex justify-between text-sm text-gray-600 mb-2">
           <span>Completion Progress</span>
-          <span>{progress}%</span>
+          <span>{safeProgress}%</span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-3">
+        <div 
+          className="w-full bg-gray-200 rounded-full h-3"
+          role="progressbar"
+          aria-valuenow={safeProgress}
+          aria-valuemin="0"
+          aria-valuemax="100"
+        >
           <div
             className="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-300"
-            style={{ width: `${progress}%` }}
+            style={{ width: `${safeProgress}%` }}
           ></div>
         </div>
       </div>
     </div>
   );
+};
+
+Dashboard.propTypes = {
+  total: PropTypes.number.isRequired,
+  completed: PropTypes.number.isRequired,
+  pending: PropTypes.number.isRequired,
+  progress: PropTypes.number.isRequired,
 };
 
 export default Dashboard;
