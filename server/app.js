@@ -17,10 +17,19 @@ if (!JWT_SECRET) {
   console.error("FATAL ERROR: JWT_SECRET environment variable is not defined.");
   process.exit(1);
 }
-
+const allowedOrigins = [
+  "http://localhost:5173",                          // dev
+  "https://todo-list-app-pied-seven.vercel.app"     // production frontend
+];
 // Middleware
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
