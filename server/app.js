@@ -36,14 +36,18 @@ app.use(cors({
 
 app.use(express.json());
 
-// MySQL pool
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT,
-});
+// // MySQL pool
+// const pool = mysql.createPool({
+//   host: process.env.DB_HOST,
+//   user: process.env.DB_USER,
+//   password: process.env.DB_PASSWORD,
+//   database: process.env.DB_NAME,
+//   port: process.env.DB_PORT,
+// });
+
+// Create a pool using the connection URL
+const pool = mysql.createPool(process.env.DB_URL);
+
 
 // ---------------- Auth Middleware ----------------
 const authMiddleware = (req, res, next) => {
@@ -293,3 +297,10 @@ app.use((req, res) => {
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
+
+
+
+
+
+
+
