@@ -50,7 +50,7 @@ const Header = ({ user = {}, handleLogout }) => {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="mb-4 w-full bg-white shadow-sm rounded-lg py-3 sm:py-4 px-4 py-2">
+      <div className="mb-4 w-full bg-white shadow-sm rounded-lg sm:py-4 px-4 py-2">
         {/* Mobile layout - only visible on small screens */}
         <div className="md:hidden">
           {/* Top center - App title and quote */}
