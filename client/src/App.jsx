@@ -4,25 +4,22 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import Todo from "./components/Todo";
 import SignIn from "./components/SignIn";
 import SignUp from "./components/SignUp";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
-
   return (
     <Router>
       <Routes>
         <Route
           path="/"
-          element={<Todo/>}
+          element={
+            <ProtectedRoute>
+              <Todo />
+            </ProtectedRoute>
+          }
         />
-        <Route
-          path="/signup"
-          element={ <SignUp />}
-        />
-        <Route
-          path="/signin"
-          element={<SignIn/>}
-        />
-        {/* Catch-all redirect */}
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/signin" element={<SignIn />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>
