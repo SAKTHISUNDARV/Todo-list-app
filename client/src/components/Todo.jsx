@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import Alert from "./Alert";
 import Header from "./Header";
 import Dashboard from "./Dashboard";
@@ -8,6 +9,7 @@ import AddTask from "./AddTask";
 import api from "../api";
 
 const Todo = () => {
+  
   const [tasks, setTasks] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
   const [newTask, setNewTask] = useState("");
@@ -15,6 +17,7 @@ const Todo = () => {
   const [alert, setAlert] = useState({ message: "", type: "success" });
   const [loading, setLoading] = useState(false);
 
+  const navigate = useNavigate();
   const inputRef = useRef(null);
   const profileRef = useRef(null);
 
@@ -127,7 +130,8 @@ const Todo = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    window.location.href = "/signin";
+
+    navigate("/signin"); 
   };
 
   return (
