@@ -19,7 +19,7 @@ if (!JWT_SECRET) {
 }
 const allowedOrigins = [
   "http://localhost:5173",                          // dev
-  "https://todo-list-app-pied-seven.vercel.app"     // production frontend
+  "https://simple-todolist-app.vercel.app"     // production frontend
 ];
 // Middleware
 app.use(cors({
