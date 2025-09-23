@@ -4,6 +4,7 @@ import { RiLockPasswordLine } from "react-icons/ri";
 import { FaEye, FaEyeSlash, FaUser } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
+import api from "../api";
 
 const SignUp = () => {
   const [pass, setPass] = useState(true);
@@ -20,19 +21,20 @@ const SignUp = () => {
   };
 
   const handleSubmit = async (event) => {
-    event.preventDefault();
-    try {
-      const res = await axios.post('http://localhost:5000/register', values);
-      console.log(res.data);
-      if (res.data.status === "success") {
-        alert("Registration successful!");
-        navigate("/signIn");
-      }
-    } catch (err) {
-      console.error(err);
-      alert(err.response?.data?.error || "Registration failed");
+  event.preventDefault();
+  try {
+    const res = await api.post("/register", values); // use shared api
+    console.log(res.data);
+    if (res.data.status === "success") {
+      alert("Registration successful!");
+      navigate("/signIn");
     }
-  };
+  } catch (err) {
+    console.error(err);
+    alert(err.response?.data?.error || "Registration failed");
+  }
+};
+
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-100 via-blue-50 to-indigo-100 flex justify-center items-center p-4">
