@@ -18,7 +18,7 @@ if (!JWT_SECRET) {
   process.exit(1);
 }
 const allowedOrigins = [
-  "http://localhost:5173",                          // dev
+                        
   "https://simple-todolist-app.vercel.app"     // production frontend
 ];
 // Middleware
