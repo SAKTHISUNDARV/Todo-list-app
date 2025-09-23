@@ -1,6 +1,6 @@
 // App.jsx
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter as Router, Routes, Route, Navigate } from "react-router-dom"; 
 import Todo from "./components/Todo";
 import SignIn from "./components/SignIn";
 import SignUp from "./components/SignUp";
