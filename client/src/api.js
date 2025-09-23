@@ -4,7 +4,7 @@ import axios from "axios";
 // Use environment variable for flexibility
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ;
 const MAX_RETRIES = 2;
-
+console.log("BASE_URL:", BASE_URL);
 const api = axios.create({
   baseURL: BASE_URL,
   timeout: 10000, // 10 seconds timeout
