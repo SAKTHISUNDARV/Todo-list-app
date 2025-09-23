@@ -2,7 +2,7 @@
 import axios from "axios";
 
 // Use environment variable for flexibility
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL ;
 const MAX_RETRIES = 2;
 
 const api = axios.create({
