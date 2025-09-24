@@ -16,7 +16,7 @@ const AddTask = ({
     <>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
         <h2 className="font-semibold text-blue-600 text-lg sm:text-xl">
-          Today's Tasks
+          Your Task's
         </h2>
         
         <div className="flex gap-2 w-full sm:w-auto">
