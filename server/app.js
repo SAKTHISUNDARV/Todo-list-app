@@ -67,7 +67,7 @@ const authMiddleware = (req, res, next) => {
 // ---------------- User Routes ----------------
 app.post("/register", [
   body('email').isEmail().normalizeEmail(),
-  body('password').isLength({ min: 6 }),
+  body('password').isLength({ min: 1 }),
   body('username').isLength({ min: 1 }).trim().escape()
 ], async (req, res) => {
   try {
