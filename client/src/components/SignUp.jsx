@@ -3,12 +3,11 @@ import { MdEmail } from "react-icons/md";
 import { RiLockPasswordLine } from "react-icons/ri";
 import { FaEye, FaEyeSlash, FaUser } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import axios from 'axios';
 import api from "../api";
 
 const SignUp = () => {
   const [pass, setPass] = useState(true);
-  const [isLoading, setIsLoading] = useState(false); // Add loading state
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const [values, setValues] = useState({
@@ -24,7 +23,6 @@ const SignUp = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     
-    // Prevent multiple submissions
     if (isLoading) return;
     
     setIsLoading(true);
@@ -34,13 +32,13 @@ const SignUp = () => {
       console.log(res.data);
       if (res.data.status === "success") {
         alert("Registration successful!");
-        navigate("/signIn");
+        navigate("/signin");
       }
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.error || "Registration failed");
     } finally {
-      setIsLoading(false); // Reset loading state
+      setIsLoading(false);
     }
   };
 
@@ -67,7 +65,7 @@ const SignUp = () => {
                 name="username"
                 value={values.username}
                 onChange={handleChange}
-                disabled={isLoading} // Disable during loading
+                disabled={isLoading}
               />
             </div>
 
@@ -82,7 +80,7 @@ const SignUp = () => {
                 value={values.email}
                 onChange={handleChange}
                 autoComplete="email"
-                disabled={isLoading} // Disable during loading
+                disabled={isLoading}
               />
             </div>
 
@@ -97,13 +95,13 @@ const SignUp = () => {
                 value={values.password}
                 onChange={handleChange}
                 autoComplete="current-password"
-                disabled={isLoading} // Disable during loading
+                disabled={isLoading}
               />
               <button
                 type="button"
                 onClick={() => setPass(!pass)}
                 className="absolute right-3 text-gray-400 hover:text-blue-600 focus:outline-none"
-                disabled={isLoading} // Disable during loading
+                disabled={isLoading}
               >
                 {pass ? <FaEyeSlash className="w-5 h-5" /> : <FaEye className="w-5 h-5" />}
               </button>
@@ -139,8 +137,8 @@ const SignUp = () => {
             <button
               className="text-blue-600 underline cursor-pointer"
               type="button"
-              onClick={() => navigate("/signIn")}
-              disabled={isLoading} // Disable during loading
+              onClick={() => navigate("/signin")}
+              disabled={isLoading}
             >
               Sign in
             </button>
@@ -155,7 +153,7 @@ const SignUp = () => {
           <p className="text-sm">
             Need help?{" "}
             <a 
-              href="mailto:sakthisundar.project@gmail.com?subject=Support Request - Task Manager&body=Hello, I need assistance with:" 
+              href="mailto:support@taskmanager.com?subject=Support Request - Task Manager&body=Hello, I need assistance with:" 
               className="underline text-white hover:text-gray-200 cursor-pointer"
             >
               Contact support

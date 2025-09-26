@@ -12,10 +12,13 @@ function SignIn() {
   const [pass, setPass] = useState(true);
   const [values, setValues] = useState({ email: "", password: "" });
   const [alert, setAlert] = useState({ message: "", type: "success" });
-  const [isLoading, setIsLoading] = useState(false); // Add loading state
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => setValues({ ...values, [e.target.name]: e.target.value });
-  const showAlert = (message, type = "success") => setAlert({ message, type });
+  const showAlert = (message, type = "success") => {
+    setAlert({ message, type });
+    setTimeout(() => setAlert({ message: "", type: "success" }), 5000);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,7 +42,7 @@ function SignIn() {
       console.error(err);
       showAlert(err.response?.data?.error || "Login failed", "error");
     } finally {
-      setIsLoading(false); // Reset loading state
+      setIsLoading(false);
     }
   };
 
@@ -67,7 +70,7 @@ function SignIn() {
                 onChange={handleChange}
                 className="flex-1 bg-transparent focus:outline-none"
                 required
-                disabled={isLoading} // Disable inputs during loading
+                disabled={isLoading}
               />
             </div>
 
@@ -81,13 +84,13 @@ function SignIn() {
                 onChange={handleChange}
                 className="flex-1 bg-transparent focus:outline-none pr-10"
                 required
-                disabled={isLoading} // Disable inputs during loading
+                disabled={isLoading}
               />
               <button 
                 type="button" 
                 onClick={() => setPass(!pass)} 
                 className="absolute right-3 text-gray-500"
-                disabled={isLoading} // Disable button during loading
+                disabled={isLoading}
               >
                 {pass ? <FaEyeSlash className="w-5 h-5 sm:w-5 sm:h-5" /> : <FaEye className="w-5 h-5 sm:w-5 sm:h-5" />}
               </button>
@@ -99,7 +102,7 @@ function SignIn() {
                   ? "bg-gray-400 cursor-not-allowed" 
                   : "bg-gradient-to-r from-blue-500 to-indigo-500"
               }`}
-              disabled={isLoading} // Disable button during loading
+              disabled={isLoading}
             >
               {isLoading ? (
                 <>
@@ -119,7 +122,7 @@ function SignIn() {
               <button 
                 className="text-blue-600 underline cursor-pointer" 
                 onClick={() => navigate("/signup")}
-                disabled={isLoading} // Disable navigation during loading
+                disabled={isLoading}
               >
                 Sign up
               </button>

@@ -9,28 +9,67 @@ import AddTask from "./AddTask";
 import api from "../api";
 
 const Todo = () => {
-  
   const [tasks, setTasks] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
   const [newTask, setNewTask] = useState("");
   const [filter, setFilter] = useState("all");
   const [alert, setAlert] = useState({ message: "", type: "success" });
   const [loading, setLoading] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
 
   const navigate = useNavigate();
   const inputRef = useRef(null);
   const profileRef = useRef(null);
 
-  const user = JSON.parse(localStorage.getItem("user")) || null;
+  // Authentication check function
+  const checkAuth = useCallback(() => {
+    const token = localStorage.getItem("token");
+    const user = localStorage.getItem("user");
+    
+    if (!token || !user) {
+      showAlert("Session expired. Please login again.", "error");
+      setTimeout(() => navigate("/signin"), 2000);
+      return false;
+    }
+    
+    try {
+      // Check if token is expired
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const isExpired = payload.exp * 1000 < Date.now();
+      
+      if (isExpired) {
+        showAlert("Session expired. Please login again.", "error");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setTimeout(() => navigate("/signin"), 2000);
+        return false;
+      }
+      return true;
+    } catch (error) {
+      showAlert("Invalid session. Please login again.", "error");
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      setTimeout(() => navigate("/signin"), 2000);
+      return false;
+    }
+  }, [navigate]);
 
   const showAlert = useCallback((message, type = "success") => {
     setAlert({ message, type });
-    setTimeout(() => setAlert({ message: "", type: "success" }), 3000);
+    setTimeout(() => setAlert({ message: "", type: "success" }), 5000);
   }, []);
 
-  // Fetch tasks - CORRECTED
+  // Check authentication on component mount
   useEffect(() => {
-    if (!user) return;
+    const isAuthenticated = checkAuth();
+    if (isAuthenticated) {
+      setAuthChecked(true);
+    }
+  }, [checkAuth]);
+
+  // Fetch tasks
+  useEffect(() => {
+    if (!authChecked) return;
     
     const fetchTasks = async () => {
       setLoading(true);
@@ -39,70 +78,114 @@ const Todo = () => {
         setTasks(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error("Error fetching tasks:", err);
-        // Handle error without causing infinite loops
-        setAlert({ message: "Failed to fetch tasks!", type: "error" });
-        setTimeout(() => setAlert({ message: "", type: "success" }), 3000);
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          showAlert("Session expired. Please login again.", "error");
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          setTimeout(() => navigate("/signin"), 2000);
+        } else {
+          showAlert(err.response?.data?.error || "Failed to fetch tasks!", "error");
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchTasks();
-  }, []); // ← Only user as dependency
+  }, [authChecked, navigate, showAlert]);
 
-  // Add task - CORRECTED
+  // Add task
   const addTask = useCallback(async () => {
     if (!newTask.trim()) return;
+    
+    if (!checkAuth()) return;
+    
     try {
       const res = await api.post("/tasks", { taskname: newTask });
       setTasks(prevTasks => [res.data, ...prevTasks]);
       setNewTask("");
-      setShowAdd(false); // ← Close the add form
+      setShowAdd(false);
       showAlert("Task added successfully!", "success");
     } catch (error) {
       console.error("Error adding task:", error);
-      showAlert("Failed to add task!", "error");
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        showAlert("Session expired. Please login again.", "error");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setTimeout(() => navigate("/signin"), 2000);
+      } else {
+        showAlert(error.response?.data?.error || "Failed to add task!", "error");
+      }
     }
-  }, [newTask, showAlert]);
+  }, [newTask, showAlert, navigate, checkAuth]);
 
   // Toggle task status
   const toggleTaskStatus = useCallback(async (id) => {
+    if (!checkAuth()) return;
+    
     try {
       const res = await api.put(`/tasks/${id}/status`);
       setTasks(prev => prev.map((t) => (t.id === id ? { ...t, status: res.data.status } : t)));
       showAlert("Task status updated!", "blue");
     } catch (error) {
       console.error(error);
-      showAlert("Failed to update status!", "error");
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        showAlert("Session expired. Please login again.", "error");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setTimeout(() => navigate("/signin"), 2000);
+      } else {
+        showAlert(error.response?.data?.error || "Failed to update status!", "error");
+      }
     }
-  }, [showAlert]);
+  }, [showAlert, navigate, checkAuth]);
 
   // Update task name
   const updateTask = useCallback(async (id, taskname) => {
+    if (!checkAuth()) return;
+    
     try {
       await api.put(`/tasks/${id}`, { taskname });
       setTasks(prev => prev.map((t) => (t.id === id ? { ...t, taskname } : t)));
       showAlert("Task updated successfully!", "success");
     } catch (error) {
       console.error(error);
-      showAlert("Failed to update task!", "error");
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        showAlert("Session expired. Please login again.", "error");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setTimeout(() => navigate("/signin"), 2000);
+      } else {
+        showAlert(error.response?.data?.error || "Failed to update task!", "error");
+      }
     }
-  }, [showAlert]);
+  }, [showAlert, navigate, checkAuth]);
 
   // Delete task
   const deleteTask = useCallback(async (id) => {
+    if (!checkAuth()) return;
+    
     try {
       await api.delete(`/tasks/${id}`);
       setTasks(prev => prev.filter((t) => t.id !== id));
       showAlert("Task deleted!", "success");
     } catch (error) {
       console.error(error);
-      showAlert("Failed to delete task!", "error");
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        showAlert("Session expired. Please login again.", "error");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setTimeout(() => navigate("/signin"), 2000);
+      } else {
+        showAlert(error.response?.data?.error || "Failed to delete task!", "error");
+      }
     }
-  }, [showAlert]);
+  }, [showAlert, navigate, checkAuth]);
 
   // Clear all tasks
   const clearAllTasks = useCallback(async () => {
+    if (!checkAuth()) return;
+    
     if (!window.confirm("Are you sure you want to clear all tasks?")) return;
     try {
       await api.delete("/clearalltasks");
@@ -110,9 +193,16 @@ const Todo = () => {
       showAlert("All tasks cleared!", "success");
     } catch (error) {
       console.error("Error clearing tasks:", error);
-      showAlert("Failed to clear tasks!", "error");
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        showAlert("Session expired. Please login again.", "error");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setTimeout(() => navigate("/signin"), 2000);
+      } else {
+        showAlert(error.response?.data?.error || "Failed to clear tasks!", "error");
+      }
     }
-  }, [showAlert]);
+  }, [showAlert, navigate, checkAuth]);
 
   // Filter tasks based on current filter
   const filteredTasks = tasks.filter((task) => {
@@ -130,9 +220,22 @@ const Todo = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-
     navigate("/signin"); 
   };
+
+  // Show loading while checking authentication
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 to-indigo-100 pt-4 px-5 overflow-auto flex justify-center items-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const user = JSON.parse(localStorage.getItem("user"));
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 to-indigo-100 pt-4 px-5 overflow-auto">
@@ -141,6 +244,7 @@ const Todo = () => {
         type={alert.type}
         onClose={() => setAlert({ message: "", type: "success" })}
       />
+      
       {user && <Header user={user} handleLogout={handleLogout} profileRef={profileRef} />}
 
       <div className="max-w-6xl mx-auto">

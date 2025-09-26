@@ -1,4 +1,3 @@
-// app.js
 const express = require("express");
 const mysql = require("mysql2/promise");
 const bcrypt = require("bcrypt");
@@ -8,7 +7,7 @@ const { body, validationResult } = require("express-validator");
 require("dotenv").config();
 
 const app = express();
-const port = process.env.PORT ;
+const port = process.env.PORT;
 const saltRounds = 10;
 
 // --- CRITICAL: Fail fast if JWT_SECRET is not set ---
@@ -17,10 +16,12 @@ if (!JWT_SECRET) {
   console.error("FATAL ERROR: JWT_SECRET environment variable is not defined.");
   process.exit(1);
 }
+
 const allowedOrigins = [
-      "http://localhost:5173",                  
-  "https://simple-todolist-app.vercel.app"     // production frontend
+  "http://localhost:5173",                  
+  "https://simple-todolist-app.vercel.app"
 ];
+
 // Middleware
 app.use(cors({
   origin: (origin, callback) => {
@@ -36,29 +37,28 @@ app.use(cors({
 
 app.use(express.json());
 
-// // MySQL pool
-// const pool = mysql.createPool({
-//   host: process.env.DB_HOST,
-//   user: process.env.DB_USER,
-//   password: process.env.DB_PASSWORD,
-//   database: process.env.DB_NAME,
-//   port: process.env.DB_PORT,
-// });
-
 // Create a pool using the connection URL
 const pool = mysql.createPool(process.env.DB_URL);
 
-
-// ---------------- Auth Middleware ----------------
+// ---------------- Improved Auth Middleware ----------------
 const authMiddleware = (req, res, next) => {
   const authHeader = req.headers["authorization"];
-  if (!authHeader) return res.status(401).json({ error: "No token provided" });
+  if (!authHeader) {
+    return res.status(401).json({ error: "No token provided. Please login again." });
+  }
 
   const token = authHeader.split(" ")[1];
-  if (!token) return res.status(401).json({ error: "Invalid token format" });
+  if (!token) {
+    return res.status(401).json({ error: "Invalid token format. Please login again." });
+  }
 
   jwt.verify(token, JWT_SECRET, (err, decoded) => {
-    if (err) return res.status(403).json({ error: "Invalid or expired token" });
+    if (err) {
+      if (err.name === 'TokenExpiredError') {
+        return res.status(401).json({ error: "Session expired. Please login again." });
+      }
+      return res.status(403).json({ error: "Invalid token. Please login again." });
+    }
     req.user = decoded;
     next();
   });
@@ -71,7 +71,6 @@ app.post("/register", [
   body('username').isLength({ min: 1 }).trim().escape()
 ], async (req, res) => {
   try {
-    // Check for validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -79,7 +78,6 @@ app.post("/register", [
 
     const { username, email, password } = req.body;
 
-    // Check if user already exists
     const [userExists] = await pool.query("SELECT id FROM users WHERE email = ?", [email]);
     if (userExists.length > 0) {
       return res.status(409).json({ error: "Email already registered" });
@@ -131,13 +129,7 @@ app.post("/login", [
   }
 });
 
-app.post("/logout", (req, res) => {
-  res.status(200).json({ message: "Logged out successfully" });
-});
-
-// ---------------- Task Routes (CRUD) ----------------
-
-// Get all tasks
+// ---------------- Task Routes ----------------
 app.get("/tasks", authMiddleware, async (req, res) => {
   try {
     const [rows] = await pool.query(
@@ -151,7 +143,6 @@ app.get("/tasks", authMiddleware, async (req, res) => {
   }
 });
 
-// Add new task
 app.post("/tasks", authMiddleware, [
   body('taskname').isLength({ min: 1 }).trim().escape()
 ], async (req, res) => {
@@ -179,7 +170,6 @@ app.post("/tasks", authMiddleware, [
   }
 });
 
-// Update task name
 app.put("/tasks/:id", authMiddleware, [
   body('taskname').isLength({ min: 1 }).trim().escape()
 ], async (req, res) => {
@@ -208,7 +198,6 @@ app.put("/tasks/:id", authMiddleware, [
   }
 });
 
-// Toggle task status
 app.put("/tasks/:id/status", authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
@@ -235,7 +224,6 @@ app.put("/tasks/:id/status", authMiddleware, async (req, res) => {
   }
 });
 
-// Delete task
 app.delete("/tasks/:id", authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
@@ -255,7 +243,6 @@ app.delete("/tasks/:id", authMiddleware, async (req, res) => {
   }
 });
 
-// Clear all tasks for the logged-in user
 app.delete("/clearalltasks", authMiddleware, async (req, res) => {
   try {
     const [result] = await pool.query(
@@ -282,25 +269,16 @@ app.get("/health", async (req, res) => {
   }
 });
 
-// ---------------- Central Error Handling Middleware ----------------
+// ---------------- Error Handling ----------------
 app.use((err, req, res, next) => {
   console.error("Unhandled error:", err);
   res.status(500).json({ error: "Internal server error" });
 });
 
-// ---------------- 404 Handler ----------------
 app.use((req, res) => {
   res.status(404).json({ error: "Endpoint not found" });
 });
 
-// ---------------- Start server ----------------
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
-
-
-
-
-
-
-

@@ -1,10 +1,9 @@
-// src/api.js
 import axios from "axios";
 
 // Use environment variable for flexibility
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ;
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const MAX_RETRIES = 2;
-// console.log("BASE_URL:", BASE_URL);
+
 const api = axios.create({
   baseURL: BASE_URL,
   timeout: 10000, // 10 seconds timeout
@@ -55,7 +54,11 @@ api.interceptors.response.use(
         console.error("Authentication error. Redirecting to login.");
         localStorage.removeItem("token");
         localStorage.removeItem("user");
-        window.location.href = "/signin";
+        
+        // Only redirect if we're not already on the signin page
+        if (!window.location.pathname.includes('/signin')) {
+          window.location.href = "/signin";
+        }
       }
       
       // Log HTTP errors

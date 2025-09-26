@@ -1,4 +1,3 @@
-// App.jsx
 import React from "react";
 import { HashRouter as Router, Routes, Route, Navigate } from "react-router-dom"; 
 import Todo from "./components/Todo";
@@ -17,6 +16,14 @@ function App() {
               <Todo />
             </ProtectedRoute>
           }
+        />
+        <Route 
+          path="/todo" 
+          element={
+            <ProtectedRoute>
+              <Todo />
+            </ProtectedRoute>
+          } 
         />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/signin" element={<SignIn />} />
