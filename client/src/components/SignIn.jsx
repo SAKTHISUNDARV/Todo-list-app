@@ -12,12 +12,19 @@ function SignIn() {
   const [pass, setPass] = useState(true);
   const [values, setValues] = useState({ email: "", password: "" });
   const [alert, setAlert] = useState({ message: "", type: "success" });
+  const [isLoading, setIsLoading] = useState(false); // Add loading state
 
   const handleChange = (e) => setValues({ ...values, [e.target.name]: e.target.value });
   const showAlert = (message, type = "success") => setAlert({ message, type });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Prevent multiple submissions
+    if (isLoading) return;
+    
+    setIsLoading(true);
+    
     try {
       const res = await api.post("/login", values);
       if (res.data.status === "success") {
@@ -31,6 +38,8 @@ function SignIn() {
     } catch (err) {
       console.error(err);
       showAlert(err.response?.data?.error || "Login failed", "error");
+    } finally {
+      setIsLoading(false); // Reset loading state
     }
   };
 
@@ -58,6 +67,7 @@ function SignIn() {
                 onChange={handleChange}
                 className="flex-1 bg-transparent focus:outline-none"
                 required
+                disabled={isLoading} // Disable inputs during loading
               />
             </div>
 
@@ -71,19 +81,46 @@ function SignIn() {
                 onChange={handleChange}
                 className="flex-1 bg-transparent focus:outline-none pr-10"
                 required
+                disabled={isLoading} // Disable inputs during loading
               />
-              <button type="button" onClick={() => setPass(!pass)} className="absolute right-3 text-gray-500">
+              <button 
+                type="button" 
+                onClick={() => setPass(!pass)} 
+                className="absolute right-3 text-gray-500"
+                disabled={isLoading} // Disable button during loading
+              >
                 {pass ? <FaEyeSlash className="w-5 h-5 sm:w-5 sm:h-5" /> : <FaEye className="w-5 h-5 sm:w-5 sm:h-5" />}
               </button>
             </div>
 
-            <button className="w-full mt-6 py-2 text-white bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full">
-              SIGN IN
+            <button 
+              className={`w-full mt-6 py-2 text-white rounded-full flex justify-center items-center gap-2 ${
+                isLoading 
+                  ? "bg-gray-400 cursor-not-allowed" 
+                  : "bg-gradient-to-r from-blue-500 to-indigo-500"
+              }`}
+              disabled={isLoading} // Disable button during loading
+            >
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Signing In...
+                </>
+              ) : (
+                "SIGN IN"
+              )}
             </button>
 
             <div className="flex justify-center gap-1 mt-4 text-sm text-gray-600">
               <p>Don't have an account?</p>
-              <button className="text-blue-600 underline cursor-pointer" onClick={() => navigate("/signup")}>
+              <button 
+                className="text-blue-600 underline cursor-pointer" 
+                onClick={() => navigate("/signup")}
+                disabled={isLoading} // Disable navigation during loading
+              >
                 Sign up
               </button>
             </div>

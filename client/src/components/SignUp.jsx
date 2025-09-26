@@ -8,6 +8,7 @@ import api from "../api";
 
 const SignUp = () => {
   const [pass, setPass] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // Add loading state
   const navigate = useNavigate();
 
   const [values, setValues] = useState({
@@ -21,20 +22,27 @@ const SignUp = () => {
   };
 
   const handleSubmit = async (event) => {
-  event.preventDefault();
-  try {
-    const res = await api.post("/register", values); // use shared api
-    console.log(res.data);
-    if (res.data.status === "success") {
-      alert("Registration successful!");
-      navigate("/signIn");
+    event.preventDefault();
+    
+    // Prevent multiple submissions
+    if (isLoading) return;
+    
+    setIsLoading(true);
+    
+    try {
+      const res = await api.post("/register", values);
+      console.log(res.data);
+      if (res.data.status === "success") {
+        alert("Registration successful!");
+        navigate("/signIn");
+      }
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.error || "Registration failed");
+    } finally {
+      setIsLoading(false); // Reset loading state
     }
-  } catch (err) {
-    console.error(err);
-    alert(err.response?.data?.error || "Registration failed");
-  }
-};
-
+  };
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-100 via-blue-50 to-indigo-100 flex justify-center items-center p-4">
@@ -59,6 +67,7 @@ const SignUp = () => {
                 name="username"
                 value={values.username}
                 onChange={handleChange}
+                disabled={isLoading} // Disable during loading
               />
             </div>
 
@@ -73,6 +82,7 @@ const SignUp = () => {
                 value={values.email}
                 onChange={handleChange}
                 autoComplete="email"
+                disabled={isLoading} // Disable during loading
               />
             </div>
 
@@ -87,22 +97,39 @@ const SignUp = () => {
                 value={values.password}
                 onChange={handleChange}
                 autoComplete="current-password"
+                disabled={isLoading} // Disable during loading
               />
               <button
                 type="button"
                 onClick={() => setPass(!pass)}
                 className="absolute right-3 text-gray-400 hover:text-blue-600 focus:outline-none"
+                disabled={isLoading} // Disable during loading
               >
                 {pass ? <FaEyeSlash className="w-5 h-5" /> : <FaEye className="w-5 h-5" />}
               </button>
             </div>
 
-            {/* Submit */}
+            {/* Submit Button with Loading State */}
             <button
               type="submit"
-              className="w-full mt-6 py-2 text-white bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full hover:from-blue-600 hover:to-indigo-600 transition duration-200"
+              disabled={isLoading}
+              className={`w-full mt-6 py-2 text-white rounded-full transition duration-200 flex items-center justify-center gap-2 ${
+                isLoading 
+                  ? "bg-gray-400 cursor-not-allowed" 
+                  : "bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600"
+              }`}
             >
-              CREATE ACCOUNT
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Creating Account...
+                </>
+              ) : (
+                "CREATE ACCOUNT"
+              )}
             </button>
           </form>
 
@@ -113,6 +140,7 @@ const SignUp = () => {
               className="text-blue-600 underline cursor-pointer"
               type="button"
               onClick={() => navigate("/signIn")}
+              disabled={isLoading} // Disable during loading
             >
               Sign in
             </button>
@@ -126,9 +154,12 @@ const SignUp = () => {
           <p className="text-sm mb-1">Stay focused, manage your day, and achieve more.</p>
           <p className="text-sm">
             Need help?{" "}
-            <button className="underline text-white hover:text-gray-200 cursor-pointer" type="button">
+            <a 
+              href="mailto:sakthisundar.project@gmail.com?subject=Support Request - Task Manager&body=Hello, I need assistance with:" 
+              className="underline text-white hover:text-gray-200 cursor-pointer"
+            >
               Contact support
-            </button>
+            </a>
           </p>
         </div>
       </div>
